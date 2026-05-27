@@ -23,7 +23,8 @@ class AttributeController extends Controller
     public function index(Request $request): JsonResponse
     {
         $businessId = $request->query('business_id');
-        $attributes = $this->attributeService->getAllAttributes($businessId);
+        $perPage = (int) $request->query('per_page', 15);
+        $attributes = $this->attributeService->getAllAttributes($businessId, $perPage);
 
         return $this->successResponse($attributes, 'Attributes retrieved successfully');
     }

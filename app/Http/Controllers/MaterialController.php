@@ -21,7 +21,8 @@ class MaterialController extends Controller
             return $this->errorResponse('Business ID is required', 422);
         }
 
-        $materials = $this->materialService->getAllMaterials($businessId);
+        $perPage = (int) $request->query('per_page', 15);
+        $materials = $this->materialService->getAllMaterials($businessId, $perPage);
 
         return $this->successResponse($materials, 'Materials retrieved successfully');
     }

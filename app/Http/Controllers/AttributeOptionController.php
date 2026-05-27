@@ -17,12 +17,13 @@ class AttributeOptionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $attributeId = $request->query('attribute_id');
+        $perPage = (int) $request->query('per_page', 15);
 
         if (!$attributeId) {
             return $this->errorResponse('Attribute ID is required', 422);
         }
 
-        $options = $this->attributeOptionService->getOptionsByAttributeId($attributeId);
+        $options = $this->attributeOptionService->getOptionsByAttributeId($attributeId, $perPage);
 
         return $this->successResponse($options, 'Attribute options retrieved successfully');
     }

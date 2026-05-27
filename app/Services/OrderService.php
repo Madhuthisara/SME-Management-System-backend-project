@@ -9,12 +9,12 @@ use Illuminate\Support\Collection;
 
 class OrderService
 {
-    public function getAllOrders(string $businessId): Collection
+    public function getAllOrders(string $businessId, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         return Order::with(['customStatus'])
             ->where('business_id', $businessId)
             ->latest()
-            ->get();
+            ->paginate($perPage);
     }
 
     public function getOrderById(string $orderId): ?Order

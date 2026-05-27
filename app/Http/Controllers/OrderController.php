@@ -16,13 +16,14 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $businessId = $request->query('business_id');
+        $perPage = (int) $request->query('per_page', 15);
 
         if (!$businessId) {
             return $this->errorResponse('Business ID is required', 422);
         }
 
         try {
-            $orders = $this->orderService->getAllOrders($businessId);
+            $orders = $this->orderService->getAllOrders($businessId, $perPage);
             return $this->successResponse($orders, 'Orders retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
@@ -170,6 +171,7 @@ class OrderController extends Controller
     {
         try {
             $customer = auth('customer')->user();
+            $perPage = (int) $request->query('per_page', 15);
 
             if (!$customer) {
                 return $this->errorResponse('Unauthenticated customer', 401);
@@ -178,7 +180,7 @@ class OrderController extends Controller
             $orders = Order::with('items.product')
                 ->where('customer_id', $customer->id)
                 ->latest()
-                ->get();
+                ->paginate($perPage);
             
             return $this->successResponse($orders, 'Orders retrieved successfully');
         } catch (\Exception $e) {

@@ -15,6 +15,16 @@ use App\Http\Controllers\PaymentSettingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportController;
+
+
+Route::prefix('reports')->group(function () {
+    Route::get('/test', function() {
+        return response()->json(['message' => 'Server is working!']);
+    });
+    Route::get('/sales-revenue', [ReportController::class, 'getSalesRevenueReport']);
+    Route::get('/top-selling', [ReportController::class, 'getTopSellingProductsReport']);
+});
 
 // Public Routes
 Route::get('/heroes', [HeroSectionController::class, 'index']);
@@ -38,7 +48,7 @@ Route::get('/categories/all', [CategoryController::class, 'index']);
 // Health Check
 Route::get('/health', [HealthController::class, 'check']);
 
-// Authentication Routes
+// admin panel authentication routes
 Route::prefix('auth')->group(function () {
     Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
     Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
@@ -94,6 +104,14 @@ Route::middleware('jwt.verify')->group(function () {
             Route::put('/update', [AttributeOptionController::class, 'update']);
             Route::delete('/delete', [AttributeOptionController::class, 'destroy']);
         });
+    });
+
+    // Suppliers Management
+    Route::prefix('suppliers')->group(function () {
+        Route::get('/all', [\App\Http\Controllers\SupplierController::class, 'index']);
+        Route::post('/create', [\App\Http\Controllers\SupplierController::class, 'store']);
+        Route::put('/update', [\App\Http\Controllers\SupplierController::class, 'update']);
+        Route::delete('/delete', [\App\Http\Controllers\SupplierController::class, 'destroy']);
     });
 
     // Materials Management
@@ -179,6 +197,8 @@ Route::middleware('jwt.verify')->group(function () {
         Route::patch('/{id}/toggle', [PaymentSettingController::class, 'toggle']);
         Route::delete('/{id}',   [PaymentSettingController::class, 'destroy']);
     });
+
+
 });
 
 // Payment Initiation & Verification (Customer JWT)
@@ -186,3 +206,8 @@ Route::middleware('jwt.verify:customer')->prefix('payments')->group(function () 
     Route::post('/initiate', [PaymentController::class, 'initiate']);
     Route::get('/verify',    [PaymentController::class, 'verify']);
 });
+
+// PayHere Specific Routes (As requested)
+Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment']);
+Route::get('/payment/redirect/{orderId}', [PaymentController::class, 'redirectToPayHere']);
+Route::post('/payment/notify', [PaymentController::class, 'notify']);

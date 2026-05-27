@@ -14,12 +14,9 @@ class ProductService
         protected ProductRepositoryInterface $productRepo
     ) {}
 
-    public function getAllProducts(?string $businessId = null): Collection
+    public function getAllProducts(?string $businessId = null, ?string $sort = null, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        if ($businessId) {
-            return $this->productRepo->findBy(['business_id' => $businessId], ['*'], ['category']);
-        }
-        return $this->productRepo->all(['*'], ['category']);
+        return $this->productRepo->allWithSorting(['category'], $sort, $businessId, $perPage);
     }
 
     public function getProductById(string $id): ?Product

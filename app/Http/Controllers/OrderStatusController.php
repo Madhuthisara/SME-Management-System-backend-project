@@ -14,9 +14,10 @@ class OrderStatusController extends Controller
     public function index(Request $request): JsonResponse
     {
         $businessId = $request->query('business_id');
+        $perPage = (int) $request->query('per_page', 15);
         $statuses = OrderStatus::where('business_id', $businessId)
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage);
 
         return $this->successResponse($statuses, 'Order statuses retrieved successfully');
     }

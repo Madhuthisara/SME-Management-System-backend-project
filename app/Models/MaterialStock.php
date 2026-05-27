@@ -17,14 +17,25 @@ class MaterialStock extends Model
     protected $fillable = [
         'business_id',
         'material_id',
+        'supplier_id',
         'quantity',
+        'unit_cost',
         'reorder_level',
         'sku',
+    ];
+
+    protected $casts = [
+        'unit_cost' => 'decimal:4',
     ];
 
     public function business()
     {
         return $this->belongsTo(Business::class, 'business_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
     public function material()
@@ -40,5 +51,10 @@ class MaterialStock extends Model
     public function productStockMaterials()
     {
         return $this->hasMany(ProductStockMaterial::class, 'material_stock_id', 'stock_id');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(MaterialStockTransaction::class, 'stock_id', 'stock_id');
     }
 }

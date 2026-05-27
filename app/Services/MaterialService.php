@@ -12,9 +12,9 @@ class MaterialService
         protected MaterialRepositoryInterface $materialRepo
     ) {}
 
-    public function getAllMaterials(string $businessId): Collection
+    public function getAllMaterials(string $businessId, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->materialRepo->findBy(['business_id' => $businessId], ['*'], ['attributes']);
+        return $this->materialRepo->paginateBy(['business_id' => $businessId], $perPage, ['*'], ['attributes']);
     }
 
     public function createMaterial(array $data): Material

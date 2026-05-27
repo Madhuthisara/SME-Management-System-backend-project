@@ -12,9 +12,9 @@ class AttributeOptionService
         protected AttributeOptionRepositoryInterface $optionRepo
     ) {}
 
-    public function getOptionsByAttributeId(string $attributeId): Collection
+    public function getOptionsByAttributeId(string $attributeId, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->optionRepo->findBy(['attribute_id' => $attributeId]);
+        return $this->optionRepo->paginateBy(['attribute_id' => $attributeId], $perPage);
     }
 
     public function createOption(array $data): AttributeOption

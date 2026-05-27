@@ -21,7 +21,8 @@ class ProductTemplateController extends Controller
             return $this->errorResponse('Business ID is required', 422);
         }
 
-        $templates = $this->productTemplateService->getAllTemplates($businessId);
+        $perPage = (int) $request->query('per_page', 15);
+        $templates = $this->productTemplateService->getAllTemplates($businessId, $perPage);
 
         return $this->successResponse($templates, 'Product templates retrieved successfully');
     }

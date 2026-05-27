@@ -18,10 +18,29 @@ trait ApiResponse
      */
     protected function successResponse(mixed $output = [], string $message = 'Success', int $code = 200): JsonResponse
     {
+        $formattedData = $output;
+
+        if ($output instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            $formattedData = [
+                'total_records' => $output->total(),
+                'current_page' => $output->currentPage(),
+                'per_page' => $output->perPage(),
+                'values' => $output->items(),
+            ];
+        } elseif ($output instanceof \Illuminate\Http\Resources\Json\AnonymousResourceCollection && $output->resource instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
+            $paginator = $output->resource;
+            $formattedData = [
+                'total_records' => $paginator->total(),
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'values' => $output->collection,
+            ];
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message,
-            'output' => $output,
+            'output' => $formattedData,
         ], $code);
     }
 

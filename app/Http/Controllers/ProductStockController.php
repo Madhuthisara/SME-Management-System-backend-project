@@ -21,7 +21,8 @@ class ProductStockController extends Controller
             return $this->errorResponse('Business ID is required', 422);
         }
 
-        $stocks = $this->productStockService->getAllStocks($businessId);
+        $perPage = (int) $request->query('per_page', 15);
+        $stocks = $this->productStockService->getAllStocks($businessId, $perPage);
 
         return $this->successResponse($stocks, 'Product stocks retrieved successfully');
     }
