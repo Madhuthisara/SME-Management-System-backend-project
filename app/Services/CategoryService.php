@@ -11,12 +11,12 @@ class CategoryService
         protected CategoryRepositoryInterface $categoryRepo
     ) {}
 
-    public function getAllCategories(?string $businessId = null): Collection
+    public function getAllCategories(?string $businessId = null, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         if ($businessId) {
-            return $this->categoryRepo->findBy(['business_id' => $businessId]);
+            return $this->categoryRepo->paginateBy(['business_id' => $businessId], $perPage);
         }
-        return $this->categoryRepo->all();
+        return $this->categoryRepo->paginate($perPage);
     }
 
     public function createCategory(array $data)

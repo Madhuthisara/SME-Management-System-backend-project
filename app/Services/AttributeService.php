@@ -18,14 +18,14 @@ class AttributeService
      * @param string|null $businessId
      * @return Collection
      */
-    public function getAllAttributes(?string $businessId = null): Collection
+    public function getAllAttributes(?string $businessId = null, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $criteria = [];
         if ($businessId) {
             $criteria['business_id'] = $businessId;
         }
 
-        return $this->attributeRepo->findBy($criteria, ['*'], ['options']);
+        return $this->attributeRepo->paginateBy($criteria, $perPage, ['*'], ['options']);
     }
 
     /**

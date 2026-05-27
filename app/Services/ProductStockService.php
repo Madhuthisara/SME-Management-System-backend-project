@@ -17,9 +17,9 @@ class ProductStockService
         protected ProductStockRepositoryInterface $productStockRepo
     ) {}
 
-    public function getAllStocks(string $businessId): Collection
+    public function getAllStocks(string $businessId, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->productStockRepo->findBy(['business_id' => $businessId], ['*'], ['product', 'stockMaterials.materialStock.attributeOptions', 'stockMaterials.material']);
+        return $this->productStockRepo->paginateBy(['business_id' => $businessId], $perPage, ['*'], ['product', 'stockMaterials.materialStock.attributeOptions', 'stockMaterials.material']);
     }
 
     public function createOrUpdateStock(array $data): ProductStock

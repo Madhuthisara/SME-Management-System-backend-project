@@ -20,6 +20,11 @@ abstract class BaseRepository implements BaseRepositoryInterface
         return $this->model->with($relations)->get($columns);
     }
 
+    public function paginate(int $perPage = 15, array $columns = ['*'], array $relations = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->model->with($relations)->paginate($perPage, $columns);
+    }
+
     public function find(string $id, array $columns = ['*'], array $relations = []): ?Model
     {
         return $this->model->with($relations)->find($id, $columns);
@@ -28,6 +33,11 @@ abstract class BaseRepository implements BaseRepositoryInterface
     public function findBy(array $criteria, array $columns = ['*'], array $relations = []): Collection
     {
         return $this->model->with($relations)->where($criteria)->get($columns);
+    }
+
+    public function paginateBy(array $criteria, int $perPage = 15, array $columns = ['*'], array $relations = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->model->with($relations)->where($criteria)->paginate($perPage, $columns);
     }
 
     public function create(array $details): Model

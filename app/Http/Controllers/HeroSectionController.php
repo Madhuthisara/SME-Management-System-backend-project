@@ -10,12 +10,9 @@ class HeroSectionController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $heroes = HeroSection::orderBy('order')->get();
-        return response()->json([
-            'success' => true,
-            'message' => 'Hero sections retrieved successfully',
-            'data' => $heroes
-        ]);
+        $perPage = (int) $request->query('per_page', 15);
+        $heroes = HeroSection::orderBy('order')->paginate($perPage);
+        return $this->successResponse($heroes, 'Hero sections retrieved successfully');
     }
 
     public function store(Request $request): JsonResponse

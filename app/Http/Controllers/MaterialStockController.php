@@ -21,7 +21,8 @@ class MaterialStockController extends Controller
             return $this->errorResponse('Business ID is required', 422);
         }
 
-        $stocks = $this->materialStockService->getAllMaterialStocks($businessId);
+        $perPage = (int) $request->query('per_page', 15);
+        $stocks = $this->materialStockService->getAllMaterialStocks($businessId, $perPage);
 
         return $this->successResponse($stocks, 'Material stocks retrieved successfully');
     }
@@ -32,7 +33,9 @@ class MaterialStockController extends Controller
             $validatedData = $request->validate([
                 'business_id' => 'required|exists:businesses,id',
                 'material_id' => 'required|exists:materials,mat_id',
+                'supplier_id' => 'nullable|exists:suppliers,id',
                 'quantity' => 'required|numeric|min:0',
+                'unit_cost' => 'nullable|numeric|min:0',
                 'reorder_level' => 'required|numeric|min:0',
                 'sku' => 'nullable|string|max:255',
                 'attribute_options' => 'nullable|array',
@@ -48,7 +51,7 @@ class MaterialStockController extends Controller
 
     public function show(MaterialStock $materialStock): JsonResponse
     {
-        return $this->successResponse($materialStock->load(['material', 'attributeOptions']), 'Material stock retrieved successfully');
+        return $this->successResponse($materialStock->load(['material', 'attributeOptions', 'supplier']), 'Material stock retrieved successfully');
     }
 
     public function update(Request $request): JsonResponse
@@ -56,7 +59,9 @@ class MaterialStockController extends Controller
         try {
             $validatedData = $request->validate([
                 'stock_id' => 'required|exists:material_stocks,stock_id',
+                'supplier_id' => 'nullable|exists:suppliers,id',
                 'quantity' => 'sometimes|required|numeric|min:0',
+                'unit_cost' => 'nullable|numeric|min:0',
                 'reorder_level' => 'sometimes|required|numeric|min:0',
                 'sku' => 'nullable|string|max:255',
                 'attribute_options' => 'nullable|array',

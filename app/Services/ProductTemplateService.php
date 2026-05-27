@@ -14,9 +14,9 @@ class ProductTemplateService
         protected ProductTemplateRepositoryInterface $productTemplateRepo
     ) {}
 
-    public function getAllTemplates(string $businessId): Collection
+    public function getAllTemplates(string $businessId, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->productTemplateRepo->findBy(['business_id' => $businessId], ['*'], ['materials.material']);
+        return $this->productTemplateRepo->paginateBy(['business_id' => $businessId], $perPage, ['*'], ['materials.material']);
     }
 
     public function createTemplate(array $data): ProductTemplate

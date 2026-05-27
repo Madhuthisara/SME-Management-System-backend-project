@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/payment/notify',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {

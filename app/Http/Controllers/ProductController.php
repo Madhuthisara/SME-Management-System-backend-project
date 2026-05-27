@@ -17,8 +17,10 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $businessId = $request->query('business_id');
+        $sort = $request->query('sort');
+        $perPage = (int) $request->query('per_page', 15);
 
-        $products = $this->productService->getAllProducts($businessId);
+        $products = $this->productService->getAllProducts($businessId, $sort, $perPage);
 
         return $this->successResponse(ProductResource::collection($products), 'Products retrieved successfully');
     }

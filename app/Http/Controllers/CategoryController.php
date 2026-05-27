@@ -17,8 +17,9 @@ class CategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $businessId = $request->query('business_id');
+        $perPage = (int) $request->query('per_page', 15);
 
-        $categories = $this->categoryService->getAllCategories($businessId);
+        $categories = $this->categoryService->getAllCategories($businessId, $perPage);
         return $this->successResponse($categories, 'Categories retrieved successfully');
     }
 
