@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Handle cases where the Authorization header is dropped or renamed by the server (Nginx/Apache).
+ */
+if (!isset($_SERVER['HTTP_AUTHORIZATION']) && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+    $_SERVER['HTTP_AUTHORIZATION'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
