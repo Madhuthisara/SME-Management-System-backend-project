@@ -6,7 +6,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'], 
+    'allowed_origins' => ['http://localhost:3000','http://localhost:3001','https://raging-fire-e-store-fe.vercel.app','https://sme-management-system-frontend.vercel.app'], 
 
     'allowed_origins_patterns' => [],
 
