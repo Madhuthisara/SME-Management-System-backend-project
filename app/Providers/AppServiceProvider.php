@@ -21,8 +21,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (App::environment('production')) {
-        Artisan::call('migrate', ['--force' => true]);
-    }
+        if (env('JWT_SECRET')) {
+            config(['jwt.secret' => env('JWT_SECRET')]);
+        }
     }
 }
