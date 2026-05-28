@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -50,26 +51,36 @@ class AuthController extends Controller
         }
     }
 
-  public function login(Request $request)
+public function login(Request $request)
 {
     $credentials = $request->only('email', 'password');
 
-   
-    if (! $token = auth()->attempt($credentials)) {
+    try {
+       
+        if (! $token = JWTAuth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized: Invalid email or password credentials.',
+                'output' => []
+            ], 401);
+        }
+    } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'Unauthorized: Invalid email or password credentials.',
+            'message' => 'Could not create token: ' . $e->getMessage(),
             'output' => []
-        ], 401);
+        ], 500);
     }
 
     
+    $user = auth('api')->user(); 
+
     return response()->json([
         'success' => true,
         'message' => 'Login successful',
         'data' => [
-            'token' => $token,
-           'user' => auth('api')->user()
+            'token' => $token, 
+            'user' => $user
         ]
     ], 200);
 }
