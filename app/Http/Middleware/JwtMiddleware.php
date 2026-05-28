@@ -32,11 +32,12 @@ class JwtMiddleware extends BaseMiddleware
 
             $user = JWTAuth::parseToken()->authenticate();
         } catch (Exception $e) {
-            \Illuminate\Support\Facades\Log::error('JwtMiddleware Error: ' . $e->getMessage(), [
-                'exception' => get_class($e),
-                'token_present' => !empty($request->header('Authorization')),
-                'url' => $request->fullUrl(),
-            ]);
+            // Log the exact error message to help identify signatureMismatch vs Expiry
+            \Illuminate\Support\Facades\Log::error('--- JWT AUTH FAILURE ---');
+            \Illuminate\Support\Facades\Log::error('Message: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Type: ' . get_class($e));
+            \Illuminate\Support\Facades\Log::error('Header: ' . substr($request->header('Authorization'), 0, 30) . '...');
+            \Illuminate\Support\Facades\Log::error('------------------------');
             if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException) {
                 return response()->json([
                     'success' => false,
