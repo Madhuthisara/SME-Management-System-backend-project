@@ -50,20 +50,27 @@ class AuthController extends Controller
         }
     }
 
-    public function login(Request $request): JsonResponse
-    {
-        try {
-            $credentials = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required',
-            ]);
+  public function login(Request $request)
+{
+    $credentials = $request->only('email', 'password');
 
-            $result = $this->authService->loginUser($credentials);
-
-            return $this->successResponse($result, 'Login successful!');
-
-        } catch (\Exception $e) {
-            return $this->errorResponse('Login failed.', 401, [], $e);
-        }
+   
+    if (! $token = auth()->attempt($credentials)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized: Invalid email or password credentials.',
+            'output' => []
+        ], 401);
     }
+
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Login successful',
+        'data' => [
+            'token' => $token,
+            'user' => auth()->user()
+        ]
+    ], 200);
+}
 }
