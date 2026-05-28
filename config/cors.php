@@ -2,22 +2,20 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+   'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
-
-    // 'allowed_origins' => ['http://localhost:3000','http://localhost:3001','https://raging-fire-e-store-fe.vercel.app','https://sme-management-system-frontend-hvjqbrle1.vercel.app','https://sme-management-system-frontend-hvjqbrle1.vercel.app'], 
+    'allowed_origins' => ['http://localhost:3000','http://localhost:3001','https://raging-fire-e-store-fe.vercel.app','https://sme-management-system-frontend.vercel.app'], 
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+   'allowed_headers' => ['Content-Type', 'X-Requested-With', 'Authorization', 'Accept', 'X-XSRF-TOKEN'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['Authorization'],
 
     'max_age' => 0,
 
-    'supports_credentials' => false, //true, 
+    'supports_credentials' => true, //true, 
 
 ];
