@@ -24,8 +24,19 @@ class JwtMiddleware extends BaseMiddleware
                 // Set the guard for the current request
                 Auth::shouldUse($guard);
             }
+            
+            $token = $request->header('Authorization');
+            if (!$token) {
+                \Illuminate\Support\Facades\Log::warning('JwtMiddleware: No Authorization header found');
+            }
+
             $user = JWTAuth::parseToken()->authenticate();
         } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error('JwtMiddleware Error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'token_present' => !empty($request->header('Authorization')),
+                'url' => $request->fullUrl(),
+            ]);
             if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException) {
                 return response()->json([
                     'success' => false,
