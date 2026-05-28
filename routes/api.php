@@ -52,6 +52,7 @@ Route::get('/health', [HealthController::class, 'check']);
 Route::prefix('auth')->group(function () {
     Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
     Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
+    Route::get('/debug', [\App\Http\Controllers\AuthDebugController::class, 'debug']);
 });
 
 // Customer Authentication Routes
