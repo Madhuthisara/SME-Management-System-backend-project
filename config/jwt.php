@@ -146,7 +146,6 @@ return [
     */
 
     'required_claims' => [
-        // 'iss',
         'iat',
         'exp',
         'nbf',
@@ -317,5 +316,9 @@ return [
         */
 
         'storage' => PHPOpenSourceSaver\JWTAuth\Providers\Storage\Illuminate::class,
+
+        
     ],
+
+    'check_issuer' => false,
 ];
