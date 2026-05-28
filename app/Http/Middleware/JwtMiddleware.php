@@ -32,34 +32,31 @@ class JwtMiddleware extends BaseMiddleware
 
             $user = JWTAuth::parseToken()->authenticate();
         } catch (Exception $e) {
-            // Log the exact error message to help identify signatureMismatch vs Expiry
-            \Illuminate\Support\Facades\Log::error('--- JWT AUTH FAILURE ---');
-            \Illuminate\Support\Facades\Log::error('Message: ' . $e->getMessage());
-            \Illuminate\Support\Facades\Log::error('Type: ' . get_class($e));
-            \Illuminate\Support\Facades\Log::error('Header: ' . substr($request->header('Authorization'), 0, 30) . '...');
-            \Illuminate\Support\Facades\Log::error('------------------------');
+            // Log the exact JWT error for diagnosis
+            \Illuminate\Support\Facades\Log::error('JWT Error: ' . $e->getMessage());
+
             if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Token is Invalid',
+                    'message' => 'Token is Invalid: ' . $e->getMessage(),
                     'output' => []
                 ], 401);
             } else if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Token is Expired',
+                    'message' => 'Token is Expired: ' . $e->getMessage(),
                     'output' => []
                 ], 401);
             } else if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenNotFoundException) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Authorization Token not found in request headers',
+                    'message' => 'Authorization Token not found',
                     'output' => []
                 ], 401);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Authorization Token error: ' . $e->getMessage(),
+                    'message' => 'Authorization Error: ' . $e->getMessage(),
                     'output' => []
                 ], 401);
             }
