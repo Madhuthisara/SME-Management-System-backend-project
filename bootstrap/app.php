@@ -12,11 +12,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        
+        $middleware->trustProxies(at: '*');
+        
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->alias([
             'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
+            'api/*',
+            'login',
+            'logout',
             'api/payment/notify',
         ]);
     })
@@ -33,17 +41,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (\Throwable $e, $request) {
             if ($request->is('api/*')) {
-                // Log the error
                 \Illuminate\Support\Facades\Log::error('Server Error: ' . $e->getMessage(), [
                     'url' => $request->url(),
                     'method' => $request->method(),
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Internal Server Error. Please contact support if the issue persists.',
+                    'message' => 'Internal Server Error: ' . $e->getMessage(),
                     'output' => [],
                 ], 500);
             }
