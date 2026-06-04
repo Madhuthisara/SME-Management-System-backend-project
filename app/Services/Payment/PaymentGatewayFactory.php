@@ -5,7 +5,6 @@ namespace App\Services\Payment;
 use App\Contracts\PaymentGatewayInterface;
 use App\Exceptions\PaymentGatewayException;
 use App\Models\PaymentSetting;
-use App\Services\Payment\Drivers\PayHereGateway;
 use App\Services\Payment\Drivers\PayPalGateway;
 use App\Services\Payment\Drivers\StripeGateway;
 
@@ -37,7 +36,6 @@ class PaymentGatewayFactory
         return match($gatewayName) {
             'stripe'  => new StripeGateway($credentials, $environment),
             'paypal'  => new PayPalGateway($credentials, $environment),
-            'payhere' => new PayHereGateway($credentials, $environment),
             default   => throw new PaymentGatewayException("Unsupported payment gateway: '{$gatewayName}'."),
         };
     }

@@ -5,7 +5,9 @@ namespace App\Services\Payment\Drivers;
 use App\Contracts\PaymentGatewayInterface;
 use App\Exceptions\PaymentGatewayException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Stripe\Webhook;
 use Illuminate\Support\Str;
 
 class StripeGateway implements PaymentGatewayInterface
@@ -18,46 +20,50 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function __construct(array $credentials, string $environment = 'sandbox')
     {
-        $this->secretKey     = $credentials['secret_key'] ?? '';
-        $this->webhookSecret = $credentials['webhook_secret'] ?? '';
+        $this->secretKey     = $credentials['secret_key'] ?? env('STRIPE_SECRET_KEY', '');
+        $this->webhookSecret = $credentials['webhook_secret'] ?? env('STRIPE_WEBHOOK_SECRET', '');
         $this->environment   = $environment;
     }
 
-    /**
-     * Amount Normalization: Stripe requires amounts in the smallest currency unit (cents).
-     * LKR 150.00 → 15000, USD 10.50 → 1050
-     */
     public function initiate(array $paymentData): array
     {
         $amountInCents = (int) round($paymentData['amount'] * 100);
         $currency      = strtolower($paymentData['currency'] ?? 'lkr');
 
         try {
-            $response = Http::withBasicAuth($this->secretKey, '')
-                ->post(self::API_BASE . '/payment_intents', [
-                    'amount'               => $amountInCents,
-                    'currency'             => $currency,
-                    'metadata'             => [
-                        'order_id'    => $paymentData['order_id'] ?? null,
-                        'business_id' => $paymentData['business_id'] ?? null,
+            // Set Stripe API Key
+            Stripe::setApiKey($this->secretKey);
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => $currency,
+                        'product_data' => [
+                            'name' => 'Order Payment',
+                        ],
+                        'unit_amount' => $amountInCents,
                     ],
-                    'automatic_payment_methods' => ['enabled' => true],
-                ]);
-
-            if ($response->failed()) {
-                throw new PaymentGatewayException('Stripe Error: ' . ($response->json('error.message') ?? 'Unknown error'));
-            }
-
-            $intent = $response->json();
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => $paymentData['return_url'] ?? '',
+                'cancel_url' => $paymentData['cancel_url'] ?? '',
+                'client_reference_id' => $paymentData['order_id'] ?? null,
+                'metadata' => [
+                    'order_id'    => $paymentData['order_id'] ?? null,
+                    'business_id' => $paymentData['business_id'] ?? null,
+                ],
+            ]);
 
             return [
-                'txn_id'      => $intent['id'],           // pi_xxxx
-                'client_secret' => $intent['client_secret'], // Returned to frontend for Stripe.js
-                'payment_url' => $paymentData['return_url'] ?? '', // Stripe uses client-side Stripe.js
+                'txn_id'      => $session->id, // cs_test_...
+                'payment_url' => $session->url, // Redirect URL for Stripe Checkout
                 'status'      => 'pending',
+                'metadata'    => ['session_id' => $session->id]
             ];
-        } catch (PaymentGatewayException $e) {
-            throw $e;
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            throw new PaymentGatewayException('Stripe API Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             throw new PaymentGatewayException('Failed to initiate Stripe payment: ' . $e->getMessage());
         }
@@ -92,31 +98,32 @@ class StripeGateway implements PaymentGatewayInterface
     }
 
     /**
-     * Parse a webhook payload after signature is verified.
+     * Parse a webhook payload. We assume the signature is verified before calling this.
      */
     public function handleWebhook(Request $request): array
     {
-        $payload = $request->all();
+        $payload = $request->input();
         $event   = $payload['type'] ?? '';
         $object  = $payload['data']['object'] ?? [];
 
         $status = match($event) {
+            'checkout.session.completed'            => 'completed',
+            'checkout.session.expired'              => 'failed',
+            'checkout.session.async_payment_failed' => 'failed',
             'payment_intent.succeeded'              => 'completed',
             'payment_intent.payment_failed'         => 'failed',
-            'charge.refunded'                       => 'refunded',
             default                                 => 'pending',
         };
 
         return [
             'txn_id'   => $object['id'] ?? null,
-            'order_id' => $object['metadata']['order_id'] ?? null,
+            'order_id' => $object['client_reference_id'] ?? ($object['metadata']['order_id'] ?? null),
             'status'   => $status,
         ];
     }
 
     /**
-     * Verify Stripe webhook signature using HMAC-SHA256.
-     * Stripe sends a 'Stripe-Signature' header with a timestamp + signature.
+     * Verify Stripe webhook signature using Stripe SDK.
      */
     public function verifyWebhookSignature(Request $request): bool
     {
@@ -128,32 +135,15 @@ class StripeGateway implements PaymentGatewayInterface
             return false;
         }
 
-        // Parse the timestamp and v1 signature from the header
-        $parts     = explode(',', $sigHeader);
-        $timestamp = null;
-        $signatures = [];
-
-        foreach ($parts as $part) {
-            [$key, $value] = explode('=', $part, 2);
-            if ($key === 't')  $timestamp    = $value;
-            if ($key === 'v1') $signatures[] = $value;
-        }
-
-        if (!$timestamp || empty($signatures)) {
+        try {
+            Webhook::constructEvent($payload, $sigHeader, $secret);
+            return true;
+        } catch (\UnexpectedValueException $e) {
+            // Invalid payload
+            return false;
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            // Invalid signature
             return false;
         }
-
-        // Compute the expected signature
-        $signedPayload   = "{$timestamp}.{$payload}";
-        $expectedSig     = hash_hmac('sha256', $signedPayload, $secret);
-
-        // Compare against any of the signatures in the header (Stripe can send multiple)
-        foreach ($signatures as $sig) {
-            if (hash_equals($expectedSig, $sig)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

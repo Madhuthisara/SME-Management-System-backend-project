@@ -179,6 +179,10 @@ class OrderController extends Controller
 
             $orders = Order::with('items.product')
                 ->where('customer_id', $customer->id)
+                ->where(function($query) {
+                    $query->where('status', '!=', 'new')
+                          ->orWhereIn('payment_method', ['cod', 'bank_transfer']);
+                })
                 ->latest()
                 ->paginate($perPage);
             

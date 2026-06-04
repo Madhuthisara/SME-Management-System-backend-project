@@ -33,14 +33,6 @@ class WebhookController extends Controller
         return $this->processWebhook($request, $businessId, 'paypal');
     }
 
-    /**
-     * Handle PayHere IPN (Instant Payment Notification) callbacks.
-     * POST /api/webhooks/payhere/{businessId}
-     */
-    public function handlePayhere(Request $request, string $businessId): Response
-    {
-        return $this->processWebhook($request, $businessId, 'payhere');
-    }
 
     /**
      * Shared webhook processing logic with security + idempotency checks.
@@ -115,10 +107,17 @@ class WebhookController extends Controller
                 'metadata' => array_merge($transaction->metadata ?? [], ['webhook' => $webhookData]),
             ]);
 
-            // Step 6: If completed, you can dispatch an order fulfillment job here
-            // Example: if ($newStatus === 'completed' && $transaction->order_id) {
-            //     ProcessOrderFulfillment::dispatch($transaction->order_id);
-            // }
+            // Step 6: If completed or failed, update the related Order status
+            if ($transaction->order_id) {
+                $order = \App\Models\Order::find($transaction->order_id);
+                if ($order) {
+                    if ($newStatus === 'completed') {
+                        app(\App\Services\OrderService::class)->updateOrderStatus($order, 'processing', 'Payment completed successfully via webhook.');
+                    } elseif ($newStatus === 'failed') {
+                        app(\App\Services\OrderService::class)->updateOrderStatus($order, 'rejected', 'Payment failed or expired.');
+                    }
+                }
+            }
 
             // Step 7: Always return 200 to prevent gateway from retrying
             return response('Webhook processed.', 200);
