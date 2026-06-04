@@ -191,7 +191,6 @@ class PaymentService
         return match($gatewayName) {
             'stripe'  => 'Stripe',
             'paypal'  => 'PayPal',
-            'payhere' => 'PayHere',
             default   => ucfirst($gatewayName),
         };
     }

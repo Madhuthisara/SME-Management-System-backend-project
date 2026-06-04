@@ -13,6 +13,11 @@ class OrderService
     {
         return Order::with(['customStatus'])
             ->where('business_id', $businessId)
+            ->where(function($query) {
+                // Hide incomplete/failed online payments from the admin panel
+                $query->whereNotIn('status', ['new', 'rejected'])
+                      ->orWhereIn('payment_method', ['cod', 'bank_transfer', 'manual']);
+            })
             ->latest()
             ->paginate($perPage);
     }

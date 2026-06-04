@@ -36,7 +36,11 @@ Route::get('/payments/methods/{businessId}', [PaymentController::class, 'activeM
 Route::prefix('webhooks')->group(function () {
     Route::post('/stripe/{businessId}',  [WebhookController::class, 'handleStripe']);
     Route::post('/paypal/{businessId}',  [WebhookController::class, 'handlePaypal']);
-    Route::post('/payhere/{businessId}', [WebhookController::class, 'handlePayhere']);
+});
+
+// Public Payment routes
+Route::prefix('payments')->group(function () {
+    Route::post('/initiate', [PaymentController::class, 'initiate']);
 });
 Route::get('/products/all', [\App\Http\Controllers\ProductController::class, 'index']);
 Route::get('/products/{id}', [\App\Http\Controllers\ProductController::class, 'show']);
@@ -204,11 +208,5 @@ Route::middleware('jwt.verify')->group(function () {
 
 // Payment Initiation & Verification (Customer JWT)
 Route::middleware('jwt.verify:customer')->prefix('payments')->group(function () {
-    Route::post('/initiate', [PaymentController::class, 'initiate']);
     Route::get('/verify',    [PaymentController::class, 'verify']);
 });
-
-// PayHere Specific Routes (As requested)
-Route::post('/payment/initiate', [PaymentController::class, 'initiatePayment']);
-Route::get('/payment/redirect/{orderId}', [PaymentController::class, 'redirectToPayHere']);
-Route::post('/payment/notify', [PaymentController::class, 'notify']);
