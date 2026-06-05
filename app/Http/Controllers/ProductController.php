@@ -54,7 +54,7 @@ class ProductController extends Controller
             ]);
 
             $product = $this->productService->createProduct($validatedData);
-            return $this->successResponse($product, 'Product created successfully', 201);
+            return $this->successResponse(new ProductResource($product), 'Product created successfully', 201);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, [], $e);
         }
@@ -87,7 +87,7 @@ class ProductController extends Controller
             ]);
 
             $updatedProduct = $this->productService->updateProduct($product, $validatedData);
-            return $this->successResponse($updatedProduct, 'Product updated successfully');
+            return $this->successResponse(new ProductResource($updatedProduct), 'Product updated successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, [], $e);
         }
