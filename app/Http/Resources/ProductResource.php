@@ -24,6 +24,21 @@ class ProductResource extends JsonResource
             'discount' => $this->discount,
             'thumbnail_url' => $this->thumbnail_url,
             'category' => $this->category ? ['name' => $this->category->name] : null,
+            'product_template' => $this->whenLoaded('productTemplate', function() {
+                return [
+                    'id' => $this->productTemplate->id,
+                    'name' => $this->productTemplate->name,
+                    'materials' => $this->productTemplate->materials ? $this->productTemplate->materials->map(function($mat) {
+                        return [
+                            'material_id' => $mat->material_id,
+                            'quantity' => $mat->quantity,
+                            'material' => $mat->material ? [
+                                'name' => $mat->material->name,
+                            ] : null
+                        ];
+                    }) : [],
+                ];
+            }),
             'created_at' => $this->created_at,
             'images' => $this->whenLoaded('images', function() {
                 return $this->images->map(function($img) {

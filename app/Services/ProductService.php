@@ -16,13 +16,13 @@ class ProductService
 
     public function getAllProducts(?string $businessId = null, ?string $sort = null, int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return $this->productRepo->allWithSorting(['category'], $sort, $businessId, $perPage);
+        return $this->productRepo->allWithSorting(['category', 'productTemplate.materials.material'], $sort, $businessId, $perPage);
     }
 
     public function getProductById(string $id): ?Product
     {
         /** @var Product|null $product */
-        $product = $this->productRepo->find($id, ['*'], ['category', 'images']);
+        $product = $this->productRepo->find($id, ['*'], ['category', 'productTemplate.materials.material', 'images']);
         return $product;
     }
 
